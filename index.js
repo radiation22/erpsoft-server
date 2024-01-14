@@ -15,7 +15,7 @@ const io = new Server(httpServer, {
 });
 
 const uri =
-  "mongodb+srv://radiationcorporation2:Fy1hDtkCgGyLWvqV@cluster0.minbpqk.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp";
+  "mongodb+srv://radiationcorporation2:voFlY0Qc8uw3QwxY@cluster0.qcubjlp.mongodb.net/?retryWrites=true&w=majority";
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -29,34 +29,21 @@ app.use(express.json());
 
 async function run() {
   try {
-    const videoCollection = client.db("GameDB").collection("videos");
-    const likeCollection = client.db("GameDB").collection("liked");
-    const orderCollection = client.db("GameDB").collection("order");
-    const commentCollection = client.db("GameDB").collection("comment");
-    const followCollection = client.db("GameDB").collection("followers");
-
-    io.on("connection", (socket) => {
-      // Listen for incoming messages from a client
-      socket.on("message", async (data) => {
-        try {
-          // Save the message to MongoDB
-          await messageCollection.insertOne({
-            text: data.text,
-            sender: data.sender,
-          });
-
-          // Emit the received message to all connected clients, including the sender
-          io.emit("message", { text: data.text, sender: data.sender });
-        } catch (error) {
-          console.error("Error while processing message:", error);
-        }
-      });
-
-      // Handle disconnection
-      socket.on("disconnect", () => {
-        console.log("A user disconnected");
-      });
-    });
+    const userCollection = client.db("erp-soft").collection("users");
+    const employeeCollection = client.db("erp-soft").collection("employees");
+    const attendanceCollection = client.db("erp-soft").collection("attendance");
+    const holidayCollection = client.db("erp-soft").collection("holiday");
+    const positionCollection = client.db("erp-soft").collection("position");
+    const bankCollection = client.db("erp-soft").collection("bank");
+    const departmentCollection = client.db("erp-soft").collection("department");
+    const awardCollection = client.db("erp-soft").collection("awards");
+    const clientCollection = client.db("erp-soft").collection("clients");
+    const loanCollection = client.db("erp-soft").collection("loan");
+    const noticeCollection = client.db("erp-soft").collection("notice");
+    const leaveCollection = client.db("erp-soft").collection("leave");
+    const subDepartmentCollection = client
+      .db("erp-soft")
+      .collection("subDepartment");
 
     app.put("/addLike/:id", async (req, res) => {
       const id = req.params.id;
@@ -78,93 +65,328 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/addFollow", async (req, res) => {
-      const video = req.body;
-      console.log(video);
-      const result = await followCollection.insertOne(video);
+    app.put("/addSalary", async (req, res) => {
+      const updateUser = req.body;
+      const name = updateUser.department;
+      const amount = updateUser.name;
+      const filter = { name: name };
+      console.log(filter);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          releaseAmount: amount,
+        },
+      };
+      const result = await employeeCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
-    app.put("/addFollow", async (req, res) => {
-      try {
-        const userEmail = req.body.email;
-        const videoId = req.body.id;
-
-        // Assuming videoCollection is a MongoDB collection instance
-        const video = await videoCollection.findOne(
-          { _id: new ObjectId(videoId) },
-          { sort: { _id: 1 } } // Sort by _id in descending order (newest first)
-        );
-
-        if (video) {
-          // Check if userEmail is not already in the followers array
-          if (!video.followers.includes(userEmail)) {
-            // Add userEmail to the followers array
-            video.followers.push(userEmail);
-
-            // Update the document in the collection
-            await videoCollection.updateOne(
-              { _id: new ObjectId(videoId) },
-              { $set: { followers: video.followers } }
-            );
-
-            res.json({ success: true, message: "User added to followers" });
-          } else {
-            res.json({ success: false, message: "User is already a follower" });
-          }
-        } else {
-          res.json({ success: false, message: "Video not found" });
-        }
-      } catch (error) {
-        console.error(error);
-        res
-          .status(500)
-          .json({ success: false, message: "Internal server error" });
-      }
-    });
-
-    app.put("/addUnFollow", async (req, res) => {
-      try {
-        const userEmail = req.body.email;
-        const videoId = req.body.id;
-
-        // Assuming videoCollection is a MongoDB collection instance
-        const video = await videoCollection.findOne({
-          _id: new ObjectId(videoId),
-        });
-
-        if (video) {
-          // Check if userEmail is in the followers array
-          const indexOfUser = video.followers.indexOf(userEmail);
-
-          if (indexOfUser !== -1) {
-            // Remove userEmail from the followers array
-            video.followers.splice(indexOfUser, 1);
-
-            // Update the document in the collection
-            await videoCollection.updateOne(
-              { _id: new ObjectId(videoId) },
-              { $set: { followers: video.followers } }
-            );
-
-            res.json({ success: true, message: "User removed from followers" });
-          } else {
-            res.json({ success: false, message: "User is not a follower" });
-          }
-        } else {
-          res.json({ success: false, message: "Video not found" });
-        }
-      } catch (error) {
-        console.error(error);
-        res
-          .status(500)
-          .json({ success: false, message: "Internal server error" });
-      }
-    });
-
-    app.post("/saveLikedVideos", async (req, res) => {
+    app.post("/addEmployee", async (req, res) => {
       const video = req.body;
-      const result = await likeCollection.insertOne(video);
+
+      const result = await employeeCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addBank", async (req, res) => {
+      const video = req.body;
+
+      const result = await bankCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addLoan", async (req, res) => {
+      const video = req.body;
+
+      const result = await loanCollection.insertOne(video);
+      res.send(result);
+    });
+    app.get("/bank", async (req, res) => {
+      const query = {};
+      const cursor = bankCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/client", async (req, res) => {
+      const query = {};
+      const cursor = clientCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/notice", async (req, res) => {
+      const query = {};
+      const cursor = noticeCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/awards", async (req, res) => {
+      const query = {};
+      const cursor = awardCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/leave", async (req, res) => {
+      const query = {};
+      const cursor = leaveCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/loans", async (req, res) => {
+      const query = {};
+      const cursor = loanCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.post("/attendance", async (req, res) => {
+      const video = req.body;
+      const result = await attendanceCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addNotice", async (req, res) => {
+      const video = req.body;
+      const result = await noticeCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addDepartment", async (req, res) => {
+      const video = req.body;
+      const result = await departmentCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addClient", async (req, res) => {
+      const video = req.body;
+      const result = await clientCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addSubDepartment", async (req, res) => {
+      const video = req.body;
+      const result = await subDepartmentCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/position", async (req, res) => {
+      const video = req.body;
+      const result = await positionCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addHoliday", async (req, res) => {
+      const video = req.body;
+      const result = await holidayCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addAward", async (req, res) => {
+      const video = req.body;
+      const result = await awardCollection.insertOne(video);
+      res.send(result);
+    });
+    app.post("/addLeaveApplication", async (req, res) => {
+      const video = req.body;
+      const result = await leaveCollection.insertOne(video);
+      res.send(result);
+    });
+    app.get("/holidays", async (req, res) => {
+      const query = {};
+      const cursor = holidayCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/employees", async (req, res) => {
+      const query = {};
+      const cursor = employeeCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/departments", async (req, res) => {
+      const query = {};
+      const cursor = departmentCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.delete("/deleteAward/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await awardCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/deleteLoan/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await loanCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/deleteDepartment/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await departmentCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/deleteNotice/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await awardCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/deleteBank/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bankCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/deleteSubDept/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await subDepartmentCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/deleteEmployee/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await employeeCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.get("/subDepartments", async (req, res) => {
+      const query = {};
+      const cursor = subDepartmentCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+    app.get("/attendance", async (req, res) => {
+      const query = {};
+      const cursor = attendanceCollection.find(query);
+      const video = await cursor.toArray();
+      res.send(video);
+    });
+
+    // put method
+
+    app.put("/manageAward/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateUser = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: updateUser.name,
+          awardDescription: updateUser.awardDescription,
+          awardDate: updateUser.awardDate,
+          awardBy: updateUser.awardBy,
+          awardItem: updateUser.awardItem,
+          department: updateUser.department,
+        },
+      };
+      const result = await awardCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+    app.put("/updateEmployee/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateUser = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: updateUser.name,
+          selectedPosition: updateUser.selectedPosition,
+          selectedCity: updateUser.selectedCity,
+          phoneNumber: updateUser.phoneNumber,
+          email: updateUser.email,
+        },
+      };
+      const result = await employeeCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+    app.put("/updateBank/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateUser = req.body;
+      console.log(updateUser);
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          bankName: updateUser.bankName,
+          branchName: updateUser.branchName,
+          accountName: updateUser.accountName,
+          accountNumber: updateUser.accountNumber,
+        },
+      };
+      const result = await bankCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+    app.put("/updateNotice/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateUser = req.body;
+      console.log(updateUser);
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: updateUser.name,
+          country: updateUser.country,
+          noticeDate: updateUser.noticeDate,
+          company: updateUser.company,
+        },
+      };
+      const result = await noticeCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    app.put("/updateSubDept/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateUser = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: updateUser.name,
+          department: updateUser.department,
+        },
+      };
+      const result = await subDepartmentCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    app.put("/updateLoan/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateUser = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          selectedEmployee: updateUser.selectedEmployee,
+          permittedBy: updateUser.permittedBy,
+          approveDate: updateUser.approveDate,
+          repayment: updateUser.repayment,
+          details: updateUser.details,
+          amount: updateUser.amount,
+          interest: updateUser.interest,
+          installmentPeriod: updateUser.installmentPeriod,
+          totalRepayment: updateUser.totalRepayment,
+          installment: updateUser.installment,
+          status: updateUser.status,
+        },
+      };
+      const result = await loanCollection.updateOne(filter, updateDoc, options);
       res.send(result);
     });
 
@@ -181,7 +403,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await ticketCollection.findOne(query);
-      console.log(result);
+
       res.send(result);
     });
 
@@ -228,6 +450,13 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const cursor = videoCollection.find(query);
+      const orders = await cursor.toArray();
+      res.send(orders);
+    });
+    app.get("/myFollow", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const cursor = followCollection.find(query);
       const orders = await cursor.toArray();
       res.send(orders);
     });
@@ -457,9 +686,9 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Game app is running");
+  res.send("Erp Soft app is running");
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+  console.log(`Erp Server listening on ${PORT}`);
 });
